@@ -1,0 +1,64 @@
+﻿@page "/weatherforecasts"
+@using Zadanie11.Data
+@inject WeatherForecastService ForecastService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+
+<PageTitle>Weather forecast</PageTitle>
+
+<h1>Weather forecast</h1>
+
+<p>This component demonstrates fetching data from a service.</p>
+
+@if (forecasts == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th @onclick=@(() => Sort("Date"))>Date</th>
+                <th @onclick=@(() => Sort("TemperatureC"))>Temp. (C)</th>
+                <th @onclick=@(() => Sort("TemperatureF"))>Temp. (F)</th>
+                <th @onclick=@(() => Sort("Summary"))>Summary</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var forecast in forecasts)
+            {
+                <tr>
+                    <td>@forecast.Date.ToShortDateString()</td>
+                    <td>@forecast.TemperatureC</td>
+                    <td>@forecast.TemperatureF</td>
+                    <td>@forecast.Summary</td>
+                    <td><button @onclick=@(() => NavigateTo($"/weatherforecasts/{forecast.Id}"))>Details</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private IEnumerable<WeatherForecast>? forecasts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        forecasts = ForecastService.GetForecast();
+    }
+
+    private void Sort(string name)
+    {
+        forecasts = forecasts!.OrderBy(e => e.GetType().GetProperty(name)?.GetValue(e));
+    }
+
+    private async Task NavigateTo(string url)
+    {
+        if (await JSRuntime.InvokeAsync<bool>("confirm", "Czy chcesz zmienić stronę?"))
+        {
+            NavigationManager.NavigateTo(url);
+        }
+    }
+}
